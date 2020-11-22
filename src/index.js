@@ -4,6 +4,39 @@ const camelcase = require('camelcase');
 const axios = require('axios');
 // Initialise Low DB
 const adapter = new FileAsync('htb-db.json');
+const speakeasy = require("speakeasy");
+
+function genTOTP() {
+    return speakeasy.totp({
+        secret: process.env.HTB_TOTP_SECRET,
+        algorithm: 'sha1',
+        period: 30,
+        digits: 6,
+        encoding: "base32"
+    });
+}
+
+const submitTOTP = async (access_token) => {
+    var data = JSON.stringify({
+        "one_time_password": genTOTP()
+    });
+    var config = {
+        method: 'post',
+        url: 'https://www.hackthebox.eu/api/v4/2fa/login',
+        headers: {
+            'Authorization': 'Bearer ' + access_token,
+            'Content-Type': 'application/json'
+        },
+        data: data
+    };
+    try {
+        await axios(config);
+        return true;
+    } catch (e) {
+        return false;
+    }
+
+}
 
 const getAccessToken = async () => {
     var data = JSON.stringify({
@@ -27,9 +60,13 @@ const getAccessToken = async () => {
         const response = await axios(config);
         const body = response.data.message
         if (body.is2FAEnabled) {
-            throw new Error("Cannot work with 2FA Enabled Account Yet!!")
+            const submitOTP = await submitTOTP(body.access_token);
+            if (submitOTP) {
+                return body.access_token;
+            } else {
+                throw "Unable to Submit TOTP";
+            }
         }
-        return body.access_token;
     } catch (err) {
         throw err;
     }

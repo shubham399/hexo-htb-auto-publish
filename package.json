@@ -19,6 +19,7 @@
   "homepage": "https://github.com/shubham399/hexo-htb-auto-publish#readme",
   "dependencies": {
     "camelcase": "^6.2.0",
-    "lowdb": "^1.0.0"
+    "lowdb": "^1.0.0",
+    "speakeasy": "^2.0.0"
   }
 }
