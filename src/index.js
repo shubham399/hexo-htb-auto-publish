@@ -98,7 +98,7 @@ function processDocument(updateDB) {
         const hexoPublished = publishedPost || publishedPage;
         const tags = document.tags
         const tagNames = tags ? tags.map((tag) => tag.name.toLowerCase() || tag) : [];
-        if(tagNames.includes("hackthebox") || tagNames.includes("htb"))
+        if(document.machineId && (tagNames.includes("hackthebox") || tagNames.includes("htb")))
         await updateDB(document, hexoPublished);
         return document;
     }
