@@ -55,7 +55,7 @@ async function setupHTB(db) {
             const toDestroy = db.get('to-destroy').value();
             const toPublish = db.get('to-publish').value();
             try {
-                // const client = new Twitter(twitterConfig());
+                // const client = new HTB(htbConfig());
                 await Promise.all(toDestroy.map(async(documentInfo) => {
                     const {
                         tweetId
@@ -105,15 +105,15 @@ async function setupHTB(db) {
     }
 }
 
-function watchHexoDeployAfter(twitterPublish) {
+function watchHexoDeployAfter(htbPublish) {
     hexo.on('deployAfter', function() {
-        twitterPublish();
+        htbPublish();
     });
 }
 
-function watchHexoDeployAfter(twitterPublish) {
+function watchHexoDeployAfter(htbPublish) {
     hexo.on('deployAfter', function() {
-        twitterPublish();
+        htbPublish();
     });
 }
 
@@ -121,7 +121,7 @@ function processDocument(updateDB) {
     return (document, hexoPublished) => {
         return async (document) => {
             const publishedPost = document.layout === 'post' && document.published;
-            const publishedPage = document.layout !== 'post' && document.twitterAutoPublish !== false;
+            const publishedPage = document.layout !== 'post' && document.htbAutoPublish !== false;
             const hexoPublished = publishedPost || publishedPage;
             await updateDB(document, hexoPublished);
             return document;
@@ -153,16 +153,16 @@ async function registerFilters(cleanToPublish, updateDB) {
 
 async function main() {
     const db = await low(adapter)
-    const twitter = await setupTwitter(db);
-    registerFilters(twitter.cleanToPublish, twitter.updateDB);
-    watchHexoDeployAfter(twitter.publish)
+    const htb = await setupHTB(db);
+    registerFilters(htb.cleanToPublish, htb.updateDB);
+    watchHexoDeployAfter(htb.publish)
 }
 
 function registerConsoleCommandPublish() {
     hexo.extend.console.register('htb-publish', 'HTB publish posts.', async () => {
         const db = await low(adapter);
-        const twitter = await setupHTB(db);
-        twitter.publish();
+        const htb = await setupHTB(db);
+        htb.publish();
     });
 }
 registerConsoleCommandPublish();
