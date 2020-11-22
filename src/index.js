@@ -1,5 +1,6 @@
 const FileAsync = require('lowdb/adapters/FileAsync');
 const low = require('lowdb');
+const camelcase = require('camelcase');
 // Initialise Low DB
 const adapter = new FileAsync('htb-db.json');
 
@@ -110,12 +111,7 @@ function watchHexoDeployAfter(htbPublish) {
         htbPublish();
     });
 }
-
-function watchHexoDeployAfter(htbPublish) {
-    hexo.on('deployAfter', function() {
-        htbPublish();
-    });
-}
+watchHexoDeployAfter();
 
 function processDocument(updateDB) {
     return async (document) => {
@@ -165,4 +161,4 @@ function registerConsoleCommandPublish() {
 }
 registerConsoleCommandPublish();
 
-main().then((res) => console.log(res)).catch(err => console.error(err))
+main().then((res) => {}).catch(err => console.error(err))
