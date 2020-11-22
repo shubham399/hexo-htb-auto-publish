@@ -56,7 +56,7 @@ async function setupHTB(db) {
             const toPublish = db.get('to-publish').value();
             try {
                 // const client = new HTB(htbConfig());
-                await Promise.all(toDestroy.map(async(documentInfo) => {
+                await Promise.all(toDestroy.map(async (documentInfo) => {
                     const {
                         tweetId
                     } = documentInfo;
@@ -118,14 +118,12 @@ function watchHexoDeployAfter(htbPublish) {
 }
 
 function processDocument(updateDB) {
-    return (document, hexoPublished) => {
-        return async (document) => {
-            const publishedPost = document.layout === 'post' && document.published;
-            const publishedPage = document.layout !== 'post' && document.htbAutoPublish !== false;
-            const hexoPublished = publishedPost || publishedPage;
-            await updateDB(document, hexoPublished);
-            return document;
-        }
+    return async (document) => {
+        const publishedPost = document.layout === 'post' && document.published;
+        const publishedPage = document.layout !== 'post' && document.htbAutoPublish !== false;
+        const hexoPublished = publishedPost || publishedPage;
+        await updateDB(document, hexoPublished);
+        return document;
     }
 }
 
