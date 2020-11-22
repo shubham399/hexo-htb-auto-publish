@@ -7,7 +7,6 @@ const adapter = new FileAsync('htb-db.json');
 async function setupHTB(db) {
     await db.defaults({
         'published': [],
-        'to-destroy': [],
         'to-publish': []
     }).write();
     return {
@@ -23,7 +22,6 @@ async function setupHTB(db) {
             }).value();
             if (published) {
                 if (!hexoPublished) {
-                    await db.get('to-destroy').push(published).write();
                     await db.get('to-publish').remove({
                         permalink
                     }).write();
@@ -35,6 +33,7 @@ async function setupHTB(db) {
                         title,
                         permalink,
                         hexoPublished,
+                        machineId,
                         tags: tagNames
                     };
                     const document = db.get('to-publish').find({
@@ -54,26 +53,9 @@ async function setupHTB(db) {
         },
         async publish() {
             await db.read();
-            const toDestroy = db.get('to-destroy').value();
             const toPublish = db.get('to-publish').value();
             try {
                 // const client = new HTB(htbConfig());
-                await Promise.all(toDestroy.map(async (documentInfo) => {
-                    const {
-                        tweetId
-                    } = documentInfo;
-                    try {
-                        // await client.post(`statuses/destroy/${tweetId}`, {});
-                        await db.get('published').remove({
-                            tweetId
-                        }).write();
-                        await db.get('to-destroy').remove({
-                            tweetId
-                        }).write();
-                    } catch (error) {
-                        throw new Error(`id: ${tweetId}\n${JSON.stringify(error)}`);
-                    }
-                }));
                 await Promise.all(toPublish.map(async (documentInfo) => {
                     const {
                         title,
