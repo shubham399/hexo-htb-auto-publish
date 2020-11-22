@@ -1,8 +1,76 @@
 const FileAsync = require('lowdb/adapters/FileAsync');
 const low = require('lowdb');
 const camelcase = require('camelcase');
+const axios = require('axios');
 // Initialise Low DB
 const adapter = new FileAsync('htb-db.json');
+
+const getAccessToken = async () => {
+    var data = JSON.stringify({
+        "email": process.env.HTB_EMAIL,
+        "password": process.env.HTB_PASSWORD
+    });
+
+    var config = {
+        method: 'post',
+        url: 'https://www.hackthebox.eu/api/v4/login',
+        headers: {
+            'Host': 'www.hackthebox.eu',
+            'Origin': 'https://app.hackthebox.eu',
+            'Referer': 'https://app.hackthebox.eu/login',
+            'Content-Type': 'application/json',
+        },
+        data: data
+    };
+
+    try {
+        const response = await axios(config);
+        const body = response.data.message
+        if (body.is2FAEnabled) {
+            throw new Error("Cannot work with 2FA Enabled Account Yet!!")
+        }
+        return body.access_token;
+    } catch (err) {
+        throw err;
+    }
+}
+
+const submitWalkthrough = (access_token) => {
+    return async (machine_id, link) => {
+        var data = JSON.stringify({
+            "machine_id": machine_id,
+            "url": link,
+            "language_id": 29
+        });
+
+        var config = {
+            method: 'post',
+            url: 'https://www.hackthebox.eu/api/v4/machine/walkthroughs/submit',
+            headers: {
+                'Authorization': 'Bearer ' + access_token,
+                'Content-Type': 'application/json'
+            },
+            data: data
+        };
+        try {
+            const response = await axios(config);
+            return true;
+        } catch (e) {
+            console.log(machine_id, link);
+            if (e.response.status == 401) // 401 as unauthenticated
+                return false;
+            if (e.response.status == 403) // 403 Forbidden as Already Posted (not allowed to post)
+                return true;
+            try {
+                if (e.response.data.message == 'Walkthrough already submitted.')
+                    return true;
+                return false;
+            } catch (er) {
+                return false;
+            }
+        }
+    }
+}
 
 async function setupHTB(db) {
     await db.defaults({
@@ -56,23 +124,27 @@ async function setupHTB(db) {
             const toPublish = db.get('to-publish').value();
             try {
                 // const client = new HTB(htbConfig());
+                const token = await getAccessToken();
+                let sumbit = submitWalkthrough(token);
                 await Promise.all(toPublish.map(async (documentInfo) => {
                     const {
                         title,
                         tags,
-                        permalink
+                        permalink,
+                        machineId
                     } = documentInfo;
-                    try{
-                    console.log(documentInfo);
-                    // TODO: Publish Here
-                        await db.get('published').push(documentInfo).write();
-                        await db.get('to-publish').remove({
-                            permalink
-                        }).write();
-                      }
-                      catch (error) {
-                          throw new Error(`${status}\n${JSON.stringify(error)}`);
-                      }
+                    try {
+                        if (await sumbit(machineId, permalink)) {
+                            await db.get('published').push(documentInfo).write();
+                            await db.get('to-publish').remove({
+                                permalink
+                            }).write();
+                        }
+                        // TODO: Publish Here
+
+                    } catch (error) {
+                        throw new Error(`${status}\n${JSON.stringify(error)}`);
+                    }
                 }));
             } catch (error) {
                 hexo.log.error(error);
@@ -98,8 +170,8 @@ function processDocument(updateDB) {
         const hexoPublished = publishedPost || publishedPage;
         const tags = document.tags
         const tagNames = tags ? tags.map((tag) => tag.name.toLowerCase() || tag) : [];
-        if(document.machineId && (tagNames.includes("hackthebox") || tagNames.includes("htb")))
-        await updateDB(document, hexoPublished);
+        if (document.machineId && (tagNames.includes("hackthebox") || tagNames.includes("htb")))
+            await updateDB(document, hexoPublished);
         return document;
     }
 }
@@ -116,12 +188,6 @@ async function registerFilters(cleanToPublish, updateDB) {
             const post = posts.data[index];
             await updateDocumentDB(post);
         }
-        // NOTE: Do We want to do for pages?
-        // const pages = hexo.locals.get('pages');
-        // for (let index = 0; index < pages.length; index++) {
-        //     const page = pages.data[index];
-        //     await updateDocumentDB(page);
-        // }
     }, {
         async: true
     });
