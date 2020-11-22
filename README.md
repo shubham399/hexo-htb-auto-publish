@@ -27,7 +27,7 @@ export HTB_TOTP_SECRET="TOTP SECRET" # This is required if TOTP is enabled.
 
 after done with this.
 
-Add `machineId:` as HTB machineId
+Add `machineId:` as HTB machineId in the post header
 
 example:
 ```
