@@ -1,6 +1,6 @@
 {
   "name": "hexo-htb-auto-publish",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A Hexo plugin to submit hackthebox writeup",
   "main": "src/index.js",
   "scripts": {
@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/shubham399/hexo-htb-auto-publish#readme",
   "dependencies": {
+    "axios": "^0.21.0",
     "camelcase": "^6.2.0",
     "lowdb": "^1.0.0",
     "speakeasy": "^2.0.0"
