@@ -1,0 +1,22 @@
+{
+  "name": "hexo-htb-auto-publish",
+  "version": "0.0.1",
+  "description": "A Hexo plugin to submit hackthebox writeup",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shubham399/hexo-htb-auto-publish.git"
+  },
+  "author": "shubham.399",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shubham399/hexo-htb-auto-publish/issues"
+  },
+  "homepage": "https://github.com/shubham399/hexo-htb-auto-publish#readme",
+  "dependencies": {
+    "lowdb": "^1.0.0"
+  }
+}
